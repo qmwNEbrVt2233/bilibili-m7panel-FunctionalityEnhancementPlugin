@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili高级弹幕增强
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
+// @version      1.3.1
 // @description  开启你的B站弹幕职人之路！优化高级弹幕发送面板，增加多种高级弹幕样式
 // @author       淡い光
 // @license      MIT
@@ -914,46 +914,66 @@ function setupEnhancedSendButton() {
             zRotateFollow.addEventListener('change', updateZRotate);
         }
     }, 200);
-    // === 新增功能：锁定角度 ===
+
     const lockAngleHtml = `
-    <span class="bpx-player-adv-danmaku-checkbox bui bui-checkbox lock-angle" style="margin-top: 10px;margin-left: 13px;">
-        <div class="bui-area">
-            <input class="bui-checkbox-input" type="checkbox" aria-label="锁定角度">
-            <label class="bui-checkbox-label">
-                <span class="bui-checkbox-icon bui-checkbox-icon-default">
-                    <svg xmlns="http://www.w3.org/2000/svg" data-pointer="none" viewBox="0 0 32 32">
-                        <path d="M8 6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H8zm0-2h16c2.21 0 4 1.79 4 4v16c0 2.21-1.79 4-4 4H8c-2.21 0-4-1.79-4-4V8c0-2.21 1.79-4 4-4z"></path>
-                    </svg>
-                </span>
-                <span class="bui-checkbox-icon bui-checkbox-icon-selected">
-                    <svg xmlns="http://www.w3.org/2000/svg" data-pointer="none" viewBox="0 0 32 32">
-                        <path d="m13 18.25-1.8-1.8c-.6-.6-1.65-.6-2.25 0s-.6 1.5 0 2.25l2.85 2.85c.318.318.762.468 1.2.448.438.02.882-.13 1.2-.448l8.85-8.85c.6-.6.6-1.65 0-2.25s-1.65-.6-2.25 0l-7.8 7.8zM8 4h16c2.21 0 4 1.79 4 4v16c0 2.21-1.79 4-4 4H8c-2.21 0-4-1.79-4-4V8c0-2.21 1.79-4 4-4z"></path>
-                    </svg>
-                </span>
-                <span class="bui-checkbox-name">锁定角度</span>
-            </label>
+        <span class="bpx-player-adv-danmaku-checkbox bui bui-checkbox lock-angle" style="margin-top: 10px;margin-left: 0px;">
+            <div class="bui-area">
+                <input class="bui-checkbox-input" type="checkbox" aria-label="锁定角度">
+                <label class="bui-checkbox-label">
+                    <span class="bui-checkbox-icon bui-checkbox-icon-default">
+                        <svg xmlns="http://www.w3.org/2000/svg" data-pointer="none" viewBox="0 0 32 32">
+                            <path d="M8 6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H8zm0-2h16c2.21 0 4 1.79 4 4v16c0 2.21-1.79 4-4 4H8c-2.21 0-4-1.79-4-4V8c0-2.21 1.79-4 4-4z"></path>
+                        </svg>
+                    </span>
+                    <span class="bui-checkbox-icon bui-checkbox-icon-selected">
+                        <svg xmlns="http://www.w3.org/2000/svg" data-pointer="none" viewBox="0 0 32 32">
+                            <path d="m13 18.25-1.8-1.8c-.6-.6-1.65-.6-2.25 0s-.6 1.5 0 2.25l2.85 2.85c.318.318.762.468 1.2.448.438.02.882-.13 1.2-.448l8.85-8.85c.6-.6.6-1.65 0-2.25s-1.65-.6-2.25 0l-7.8 7.8zM8 4h16c2.21 0 4 1.79 4 4v16c0 2.21-1.79 4-4 4H8c-2.21 0-4-1.79-4-4V8c0-2.21 1.79-4 4-4z"></path>
+                        </svg>
+                    </span>
+                    <span class="bui-checkbox-name">锁定角度</span>
+                </label>
+            </div>
+        </span>
+
+        <div class="bpx-player-adv-danmaku-group-item lock-angle-length" style="margin-left: 13px; margin-top: 17px;">
+            <span class="bpx-player-adv-danmaku-title">长度</span>
+            <span class="bpx-player-adv-danmaku-spinner bui bui-input lock-angle-length-spinner" data-min="0" data-max="10000" data-step="1">
+                <div class="bui-area">
+                    <div class="bui-input-wrap">
+                        <input class="lock-angle-length-input bui-input-input" type="number" value="200">
+                        <div class="bui-input-stepper">
+                            <div class="bui-input-stepper-half bui-input-stepper-up">
+                                <span class="bui-input-arrow bui-input-arrow-up"></span>
+                            </div>
+                            <div class="bui-input-stepper-half bui-input-stepper-down">
+                                <span class="bui-input-arrow bui-input-arrow-down"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </span>
+
+            <button class="lock-angle-apply-length" style="margin-left: 20px; padding: 2px 10px; cursor: pointer;">应用</button>
         </div>
-    </span>
     `;
 
     setTimeout(() => {
         const zRotateFollowBox = document.querySelector('.z-rotate-follow');
         if (zRotateFollowBox) {
-            // 在 Z轴跟随移动角度 下面插入
+
+            // 插入所有 UI（复选框 + 长度输入框 + 按钮）
             zRotateFollowBox.insertAdjacentHTML('afterend', lockAngleHtml);
 
             const lockAngle = document.querySelector('.lock-angle input');
             const zRotateInput = document.querySelector('.bpx-player-adv-danmaku-rotateZ input');
-        // 防止 input → update → 再 input → 无限循环
+
             let _lockAngleInternal = false;
 
             function syncSpinner(inputElem) {
-                // 触发 input / change / blur
                 inputElem.dispatchEvent(new Event("input",  { bubbles: true }));
                 inputElem.dispatchEvent(new Event("change", { bubbles: true }));
                 inputElem.dispatchEvent(new Event("blur",   { bubbles: true }));
 
-                // 同时触发父容器（B站内部真正监听的层）
                 const parent = inputElem.parentElement;
                 if (parent) {
                     parent.dispatchEvent(new Event("input",  { bubbles: true }));
@@ -962,10 +982,8 @@ function setupEnhancedSendButton() {
             }
 
             function updateLockAngle() {
-                // 不启用 或 内部更新中的递归 → 直接跳过
                 if (!lockAngle.checked || _lockAngleInternal) return;
-
-                _lockAngleInternal = true; // 开启内部锁，阻止递归
+                _lockAngleInternal = true;
 
                 let startX = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startX"] input').value) || 0;
                 let startY = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startY"] input').value) || 0;
@@ -973,18 +991,18 @@ function setupEnhancedSendButton() {
                 let endY   = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endY"] input').value) || 0;
                 let angleDeg = parseFloat(zRotateInput.value) || 0;
 
-                const angleRad = angleDeg * (Math.PI / 180);
+                const angleRad = angleDeg * Math.PI / 180;
                 const dx = Math.cos(angleRad);
                 const dy = Math.sin(angleRad);
 
-                const activeElement = document.activeElement;
+                const active = document.activeElement;
                 let newEndX = endX;
                 let newEndY = endY;
 
-                if (activeElement && activeElement.matches('.bpx-player-adv-danmaku-spinner[data-key="endX"] input')) {
+                if (active && active.matches('.bpx-player-adv-danmaku-spinner[data-key="endX"] input')) {
                     const t = (endX - startX) / dx;
                     newEndY = startY + t * dy;
-                } else if (activeElement && activeElement.matches('.bpx-player-adv-danmaku-spinner[data-key="endY"] input')) {
+                } else if (active && active.matches('.bpx-player-adv-danmaku-spinner[data-key="endY"] input')) {
                     const t = (endY - startY) / dy;
                     newEndX = startX + t * dx;
                 } else {
@@ -1021,6 +1039,29 @@ function setupEnhancedSendButton() {
 
                 _lockAngleInternal = false;
             }
+
+            const lengthInput = document.querySelector('.lock-angle-length-input');
+            const applyLengthBtn = document.querySelector('.lock-angle-apply-length');
+
+            applyLengthBtn.addEventListener('click', () => {
+                let startX = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startX"] input').value) || 0;
+                let startY = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startY"] input').value) || 0;
+                let angleDeg = parseFloat(zRotateInput.value) || 0;
+                let length = parseFloat(lengthInput.value) || 0;
+
+                const angleRad = angleDeg * Math.PI / 180;
+                const newEndX = startX + length * Math.cos(angleRad);
+                const newEndY = startY + length * Math.sin(angleRad);
+
+                const endXInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endX"] input');
+                const endYInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endY"] input');
+
+                endXInput.value = Math.round(newEndX);
+                endYInput.value = Math.round(newEndY);
+
+                syncSpinner(endXInput);
+                syncSpinner(endYInput);
+            });
 
             ['startX', 'startY', 'endX', 'endY', 'zRotate'].forEach(key => {
                 const input = document.querySelector(`.bpx-player-adv-danmaku-spinner[data-key="${key}"] input`);
@@ -3109,7 +3150,7 @@ function autoPlayAfterPreview() {
                 if (danmakuContainer) {
                     danmakuContainer.classList.remove('bili-danmaku-x-paused');
                 }
-            }, 500);
+            }, getAdvancedDanmakuParams().duration * 1000);
         }
     }
 }
@@ -3262,4 +3303,3 @@ function bypassDurationLimit() {
         });
     });
 }
-
