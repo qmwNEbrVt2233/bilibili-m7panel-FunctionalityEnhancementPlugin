@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili高级弹幕增强
 // @namespace    http://tampermonkey.net/
-// @version      1.3.1
+// @version      1.3.2
 // @description  开启你的B站弹幕职人之路！优化高级弹幕发送面板，增加多种高级弹幕样式
 // @author       淡い光
 // @license      MIT
@@ -697,7 +697,8 @@ function setupEnhancedSendButton() {
         <span class="preview-danmaku-filename"></span>
     `;
     // enhancedContainer.appendChild(previewArea);
-
+    const enhancedButton = enhancedContainer.querySelector('.enhanced-send-status');
+    enhancedButton.parentNode.insertBefore(previewArea, enhancedButton);
     // 添加预览区域样式
     if (!document.querySelector('#enhanced-danmaku-preview-style')) {
         const previewStyle = document.createElement('style');
@@ -792,8 +793,8 @@ function setupEnhancedSendButton() {
     testStyleBtn.innerHTML = '<div class="bui-area bui-button-large">测试样式效果</div>';
 
     // 将测试按钮插入到发送样式弹幕按钮前面
-    const enhancedButton = enhancedContainer.querySelector('.enhanced-send-btn');
-    enhancedButton.parentNode.insertBefore(testStyleBtn, enhancedButton);
+    const enhancedButton1 = enhancedContainer.querySelector('.enhanced-send-btn');
+    enhancedButton1.parentNode.insertBefore(testStyleBtn, enhancedButton1);
 
     // 测试按钮点击事件
     testStyleBtn.addEventListener('click', async () => {
