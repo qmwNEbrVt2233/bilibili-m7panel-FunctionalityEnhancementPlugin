@@ -969,12 +969,11 @@ function setupEnhancedSendButton() {
 
         let _lockAngleInternal = false;
         let _lockAngleEditing = false;
+        let _lockAngleLastKey = null;
 
         function syncSpinner(inputElem) {
             inputElem.dispatchEvent(new Event('input', { bubbles: true }));
             inputElem.dispatchEvent(new Event('change', { bubbles: true }));
-            inputElem.dispatchEvent(new Event('blur', { bubbles: true }));
-
             const parent = inputElem.parentElement;
             if (parent) {
                 parent.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1002,15 +1001,13 @@ function setupEnhancedSendButton() {
             let newEndX = endX;
             let newEndY = endY;
 
-            const active = document.activeElement;
-
-            if (active?.matches('.bpx-player-adv-danmaku-spinner[data-key="endX"] input')) {
+            if (_lockAngleLastKey === 'endX' && Math.abs(dx) > 1e-6) {
                 const t = (endX - startX) / dx;
                 newEndY = startY + t * dy;
-            } else if (active?.matches('.bpx-player-adv-danmaku-spinner[data-key="endY"] input')) {
+            } else if (_lockAngleLastKey === 'endY' && Math.abs(dy) > 1e-6) {
                 const t = (endY - startY) / dy;
                 newEndX = startX + t * dx;
-            } else {
+            } else if (Math.abs(dx) > 1e-6) {
                 const t = (endX - startX) / dx;
                 newEndY = startY + t * dy;
             }
@@ -1024,11 +1021,11 @@ function setupEnhancedSendButton() {
             let clampedX = clamp(newEndX);
             let clampedY = clamp(newEndY);
 
-            if (clampedX !== newEndX) {
+            if (clampedX !== newEndX && Math.abs(dx) > 1e-6) {
                 const t = (clampedX - startX) / dx;
                 clampedY = clamp(startY + t * dy);
             }
-            if (clampedY !== newEndY) {
+            if (clampedY !== newEndY && Math.abs(dy) > 1e-6) {
                 const t = (clampedY - startY) / dy;
                 clampedX = clamp(startX + t * dx);
             }
@@ -1072,26 +1069,21 @@ function setupEnhancedSendButton() {
             const input = document.querySelector(`.bpx-player-adv-danmaku-spinner[data-key="${key}"] input`);
             if (!input) return;
 
-            // 输入中：只标记
             input.addEventListener('input', () => {
                 _lockAngleEditing = true;
+                _lockAngleLastKey = key;
             });
 
-            // 失焦：执行锁定
             input.addEventListener('blur', () => {
                 _lockAngleEditing = false;
                 updateLockAngle();
             });
 
-            // 回车确认
             input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') {
-                    input.blur();
-                }
+                if (e.key === 'Enter') input.blur();
             });
         });
 
-        // 勾选锁定角度时立即同步一次
         lockAngle.addEventListener('change', () => {
             updateLockAngle();
         });
