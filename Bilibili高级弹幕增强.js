@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili高级弹幕增强
 // @namespace    http://tampermonkey.net/
-// @version      1.3.2
+// @version      1.3.3
 // @description  开启你的B站弹幕职人之路！优化高级弹幕发送面板，增加多种高级弹幕样式
 // @author       淡い光
 // @license      MIT
@@ -960,117 +960,142 @@ function setupEnhancedSendButton() {
 
     setTimeout(() => {
         const zRotateFollowBox = document.querySelector('.z-rotate-follow');
-        if (zRotateFollowBox) {
+        if (!zRotateFollowBox) return;
 
-            // 插入所有 UI（复选框 + 长度输入框 + 按钮）
-            zRotateFollowBox.insertAdjacentHTML('afterend', lockAngleHtml);
+        zRotateFollowBox.insertAdjacentHTML('afterend', lockAngleHtml);
 
-            const lockAngle = document.querySelector('.lock-angle input');
-            const zRotateInput = document.querySelector('.bpx-player-adv-danmaku-rotateZ input');
+        const lockAngle = document.querySelector('.lock-angle input');
+        const zRotateInput = document.querySelector('.bpx-player-adv-danmaku-rotateZ input');
 
-            let _lockAngleInternal = false;
+        let _lockAngleInternal = false;
+        let _lockAngleEditing = false;
 
-            function syncSpinner(inputElem) {
-                inputElem.dispatchEvent(new Event("input",  { bubbles: true }));
-                inputElem.dispatchEvent(new Event("change", { bubbles: true }));
-                inputElem.dispatchEvent(new Event("blur",   { bubbles: true }));
+        function syncSpinner(inputElem) {
+            inputElem.dispatchEvent(new Event('input', { bubbles: true }));
+            inputElem.dispatchEvent(new Event('change', { bubbles: true }));
+            inputElem.dispatchEvent(new Event('blur', { bubbles: true }));
 
-                const parent = inputElem.parentElement;
-                if (parent) {
-                    parent.dispatchEvent(new Event("input",  { bubbles: true }));
-                    parent.dispatchEvent(new Event("change", { bubbles: true }));
-                }
+            const parent = inputElem.parentElement;
+            if (parent) {
+                parent.dispatchEvent(new Event('input', { bubbles: true }));
+                parent.dispatchEvent(new Event('change', { bubbles: true }));
             }
-
-            function updateLockAngle() {
-                if (!lockAngle.checked || _lockAngleInternal) return;
-                _lockAngleInternal = true;
-
-                let startX = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startX"] input').value) || 0;
-                let startY = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startY"] input').value) || 0;
-                let endX   = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endX"] input').value) || 0;
-                let endY   = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endY"] input').value) || 0;
-                let angleDeg = parseFloat(zRotateInput.value) || 0;
-
-                const angleRad = angleDeg * Math.PI / 180;
-                const dx = Math.cos(angleRad);
-                const dy = Math.sin(angleRad);
-
-                const active = document.activeElement;
-                let newEndX = endX;
-                let newEndY = endY;
-
-                if (active && active.matches('.bpx-player-adv-danmaku-spinner[data-key="endX"] input')) {
-                    const t = (endX - startX) / dx;
-                    newEndY = startY + t * dy;
-                } else if (active && active.matches('.bpx-player-adv-danmaku-spinner[data-key="endY"] input')) {
-                    const t = (endY - startY) / dy;
-                    newEndX = startX + t * dx;
-                } else {
-                    const t = (endX - startX) / dx;
-                    newEndY = startY + t * dy;
-                }
-
-                function clamp(v) {
-                    if (v < 0) return 0;
-                    if (v > 10000) return 10000;
-                    return v;
-                }
-
-                let clampedX = clamp(newEndX);
-                let clampedY = clamp(newEndY);
-
-                if (clampedX !== newEndX) {
-                    const t = (clampedX - startX) / dx;
-                    clampedY = clamp(startY + t * dy);
-                }
-                if (clampedY !== newEndY) {
-                    const t = (clampedY - startY) / dy;
-                    clampedX = clamp(startX + t * dx);
-                }
-
-                const endXInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endX"] input');
-                const endYInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endY"] input');
-
-                endXInput.value = Math.round(clampedX);
-                endYInput.value = Math.round(clampedY);
-
-                syncSpinner(endXInput);
-                syncSpinner(endYInput);
-
-                _lockAngleInternal = false;
-            }
-
-            const lengthInput = document.querySelector('.lock-angle-length-input');
-            const applyLengthBtn = document.querySelector('.lock-angle-apply-length');
-
-            applyLengthBtn.addEventListener('click', () => {
-                let startX = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startX"] input').value) || 0;
-                let startY = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startY"] input').value) || 0;
-                let angleDeg = parseFloat(zRotateInput.value) || 0;
-                let length = parseFloat(lengthInput.value) || 0;
-
-                const angleRad = angleDeg * Math.PI / 180;
-                const newEndX = startX + length * Math.cos(angleRad);
-                const newEndY = startY + length * Math.sin(angleRad);
-
-                const endXInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endX"] input');
-                const endYInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endY"] input');
-
-                endXInput.value = Math.round(newEndX);
-                endYInput.value = Math.round(newEndY);
-
-                syncSpinner(endXInput);
-                syncSpinner(endYInput);
-            });
-
-            ['startX', 'startY', 'endX', 'endY', 'zRotate'].forEach(key => {
-                const input = document.querySelector(`.bpx-player-adv-danmaku-spinner[data-key="${key}"] input`);
-                input.addEventListener('input', updateLockAngle);
-            });
-
-            lockAngle.addEventListener('change', updateLockAngle);
         }
+
+        function updateLockAngle() {
+            if (!lockAngle.checked) return;
+            if (_lockAngleInternal) return;
+            if (_lockAngleEditing) return;
+
+            _lockAngleInternal = true;
+
+            const startX = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startX"] input').value) || 0;
+            const startY = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startY"] input').value) || 0;
+            const endX   = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endX"] input').value) || 0;
+            const endY   = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endY"] input').value) || 0;
+            const angleDeg = parseFloat(zRotateInput.value) || 0;
+
+            const angleRad = angleDeg * Math.PI / 180;
+            const dx = Math.cos(angleRad);
+            const dy = Math.sin(angleRad);
+
+            let newEndX = endX;
+            let newEndY = endY;
+
+            const active = document.activeElement;
+
+            if (active?.matches('.bpx-player-adv-danmaku-spinner[data-key="endX"] input')) {
+                const t = (endX - startX) / dx;
+                newEndY = startY + t * dy;
+            } else if (active?.matches('.bpx-player-adv-danmaku-spinner[data-key="endY"] input')) {
+                const t = (endY - startY) / dy;
+                newEndX = startX + t * dx;
+            } else {
+                const t = (endX - startX) / dx;
+                newEndY = startY + t * dy;
+            }
+
+            function clamp(v) {
+                if (v < 0) return 0;
+                if (v > 10000) return 10000;
+                return v;
+            }
+
+            let clampedX = clamp(newEndX);
+            let clampedY = clamp(newEndY);
+
+            if (clampedX !== newEndX) {
+                const t = (clampedX - startX) / dx;
+                clampedY = clamp(startY + t * dy);
+            }
+            if (clampedY !== newEndY) {
+                const t = (clampedY - startY) / dy;
+                clampedX = clamp(startX + t * dx);
+            }
+
+            const endXInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endX"] input');
+            const endYInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endY"] input');
+
+            endXInput.value = Math.round(clampedX);
+            endYInput.value = Math.round(clampedY);
+
+            syncSpinner(endXInput);
+            syncSpinner(endYInput);
+
+            _lockAngleInternal = false;
+        }
+
+        const lengthInput = document.querySelector('.lock-angle-length-input');
+        const applyLengthBtn = document.querySelector('.lock-angle-apply-length');
+
+        applyLengthBtn.addEventListener('click', () => {
+            const startX = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startX"] input').value) || 0;
+            const startY = parseFloat(document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="startY"] input').value) || 0;
+            const angleDeg = parseFloat(zRotateInput.value) || 0;
+            const length = parseFloat(lengthInput.value) || 0;
+
+            const angleRad = angleDeg * Math.PI / 180;
+            const newEndX = startX + length * Math.cos(angleRad);
+            const newEndY = startY + length * Math.sin(angleRad);
+
+            const endXInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endX"] input');
+            const endYInput = document.querySelector('.bpx-player-adv-danmaku-spinner[data-key="endY"] input');
+
+            endXInput.value = Math.round(newEndX);
+            endYInput.value = Math.round(newEndY);
+
+            syncSpinner(endXInput);
+            syncSpinner(endYInput);
+        });
+
+        ['startX', 'startY', 'endX', 'endY', 'zRotate'].forEach(key => {
+            const input = document.querySelector(`.bpx-player-adv-danmaku-spinner[data-key="${key}"] input`);
+            if (!input) return;
+
+            // 输入中：只标记
+            input.addEventListener('input', () => {
+                _lockAngleEditing = true;
+            });
+
+            // 失焦：执行锁定
+            input.addEventListener('blur', () => {
+                _lockAngleEditing = false;
+                updateLockAngle();
+            });
+
+            // 回车确认
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        });
+
+        // 勾选锁定角度时立即同步一次
+        lockAngle.addEventListener('change', () => {
+            updateLockAngle();
+        });
+
     }, 200);
 
 }
@@ -1868,16 +1893,15 @@ function setupSVGPathEditor(container) {
     function updateSVGPath() {
         const rows = list.querySelectorAll('.svgpath-point-row');
         const points = [];
-        
-        rows.forEach((r, index) => {
+
+        rows.forEach((r) => {
             const xInput = r.querySelector('.svgpath-x');
             const yInput = r.querySelector('.svgpath-y');
             const x = xInput.value.trim();
             const y = yInput.value.trim();
-            
+
+            //允许空值存在，不在 input 阶段回写
             if (x === '' || y === '') {
-                xInput.value = '';
-                yInput.value = '';
                 points.push(['0', '0']);
             } else {
                 points.push([x, y]);
@@ -1900,7 +1924,7 @@ function setupSVGPathEditor(container) {
         const pathLength = path.length;
         counter.textContent = `${pathLength} / 298`;
         counter.style.color = pathLength > 298 ? 'red' : '#666';
-        
+
         return path;
     }
 
@@ -3304,3 +3328,4 @@ function bypassDurationLimit() {
         });
     });
 }
+
